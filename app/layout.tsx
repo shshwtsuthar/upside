@@ -37,10 +37,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <SidebarProvider>
+          <SidebarProvider defaultOpen={true} suppressHydrationWarning={true} >
             <AppSidebar />
-            <main>
-              <SidebarTrigger />
+            <main className="w-full">
               {children}
             </main>
           </SidebarProvider>

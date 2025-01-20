@@ -27,6 +27,37 @@ export const metadata: Metadata = {
   description: "Example dashboard app built using the components.",
 }
 
+const fetchAccounts = async () => {
+  const baseURL = "https://api.up.com.au/api/v1";
+  const endpoint = "/transactions";
+  const url = `${baseURL}${endpoint}`;
+  
+  const apiKey = process.env.UP_API_KEY; 
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("Accounts:", JSON.stringify(data));
+    return data; // Return the accounts data if needed elsewhere
+  } catch (error) {
+    console.error("Failed to fetch accounts:", error);
+  }
+};
+
+// Call the function
+console.log("Hi")
+fetchAccounts();
+
 export default function DashboardPage() {
   return (
     <>

@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Make sure the provider here matches your database (e.g., postgresql, sqlite, mysql)
+// and the url points to the variable in your .env file
+datasource db {
+  provider = "postgresql" // CHANGE THIS IF YOU USE A DIFFERENT DB
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js Models - Required for Prisma Adapter
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String // Provider type (e.g., "oauth", "email")
+  provider          String // Provider name (e.g., "google", "github")
+  providerAccountId String // User ID from the provider
+  refresh_token     String? @db.Text // Use db.Text for potentially long tokens
+  access_token      String? @db.Text // Use db.Text for potentially long tokens
+  expires_at        Int?
+  token_type        String? // Typically "Bearer" for OAuth
+  scope             String? // Scopes granted by the provider
+  id_token          String? @db.Text // Use db.Text for potentially long tokens
+  session_state     String?
+
+  // Relation to the User model
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // Cascade delete means if User deleted, Account is deleted
+
+  // Ensure combination of provider and providerAccountId is unique
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique // The token used to verify the session
+  userId       String
+  expires      DateTime // When the session expires
+
+  // Relation to the User model
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid()) // Unique user ID in your system
+  name          String?   // User's name (optional)
+  email         String?   @unique // User's email (must be unique)
+  emailVerified DateTime? // Timestamp if email is verified
+  image         String?   // URL to user's profile image (optional)
+
+  // --- Custom Fields for Upside App ---
+  // Store the ENCRYPTED Up Banking API token details
+  encryptedUpToken String? // The main encrypted token data
+  upTokenIv        String? // Initialization Vector used for encryption (needed for decryption)
+  upTokenAuthTag   String? // Authentication Tag for GCM mode (ensures integrity, needed for decryption)
+  //------------------------------------
+
+  // Relations to other NextAuth models
+  accounts Account[] // A user can have multiple linked accounts (e.g., Google, maybe email later)
+  sessions Session[] // A user can have multiple active sessions
+}
+
+model VerificationToken {
+  identifier String   // Usually email or user ID for password resets/email verification
+  token      String   @unique // The verification token itself
+  expires    DateTime // When the token expires
+
+  // Ensure the combination is unique
+  @@unique([identifier, token])
+}

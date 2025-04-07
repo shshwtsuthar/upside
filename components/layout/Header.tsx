@@ -8,15 +8,11 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         {/* Logo/Brand Name */}
-        <div className="mr-4 flex">
+        <div className="flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            {/* You can add an SVG logo here */}
+            <img src="/UP_STROKE_LOGO.svg" alt="up-logo"/>
             <span className="font-bold">Upside</span>
           </Link>
-          {/* Optional: Add navigation links here */}
-          {/* <nav className="flex items-center space-x-6 text-sm font-medium">
-              <Link href="/dashboard" className="transition-colors hover:text-foreground/80 text-foreground/60">Dashboard</Link>
-          </nav> */}
         </div>
 
         {/* Right side items */}

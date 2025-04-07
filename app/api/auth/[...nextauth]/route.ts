@@ -1,12 +1,7 @@
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
-
-// Instantiate Prisma Client - ensure this happens only once ideally
-// You might want to move Prisma Client instantiation to a separate lib file
-// for better management, but this works for now.
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // Define authentication options
 export const authOptions: AuthOptions = {

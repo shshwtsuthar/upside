@@ -5,6 +5,7 @@ import SessionProviderWrapper from "@/components/providers/SessionProviderWrappe
 import Header from "@/components/layout/Header"; // We'll create a basic Header 
 import { ThemeProvider } from "@/components/providers/ThemeProvider"; // Optional: Add ShadCN ThemeProvider if you want dark mode toggle
 import { cn } from "@/lib/utils";
+import { FloatingSettingsButton } from '@/components/layout/FloatingSettingsButton';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" }); // Inter is the greatest font of all time
 
@@ -38,7 +39,7 @@ export default function RootLayout({
               <Header />
 
               <main>{children}</main>
-
+              <FloatingSettingsButton />
             </ThemeProvider>
         </SessionProviderWrapper>
       </body>

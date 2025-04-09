@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/providers/SessionProviderWrapper"; // Importing the session wrapper
 import Header from "@/components/layout/Header"; // We'll create a basic Header 
-import { ThemeProvider } from "@/components/providers/ThemeProvider"; // Optional: Add ShadCN ThemeProvider if you want dark mode toggle
+import { ThemeProvider } from "@/components/providers/ThemeProvider"; // Optional: Add ShadCN ThemeProvider if wanting dark mode toggle
 import { cn } from "@/lib/utils";
 import { FloatingSettingsButton } from '@/components/layout/FloatingSettingsButton';
 

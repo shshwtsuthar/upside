@@ -24,11 +24,7 @@ function MissingTokenPrompt() {
             <Ban className="h-4 w-4" />
             <AlertTitle>Up Banking Token Required</AlertTitle>
             <AlertDescription>
-                Please configure your Up Banking Personal Access Token in the{' '}
-                <Link href="/settings" className="font-semibold underline hover:text-destructive/90">
-                    Settings page
-                </Link>
-                {' '}to view your dashboard.
+                Please configure your Up Banking Personal Access Token in the Settings page to view your dashboard.
             </AlertDescription>
         </Alert>
     );

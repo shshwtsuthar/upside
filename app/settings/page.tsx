@@ -112,7 +112,8 @@ export default function SettingsPage() {
 
 
   // --- Render Loading State ---
-  if (status === "loading" || (status === "authenticated" && hasTokenConfigured === null && false)) { // Added '&& false' to disable optional check for now
+  // Keeping the original loading condition
+  if (status === "loading" || (status === "authenticated" && hasTokenConfigured === null && false)) {
     return (
       <main className="container mx-auto max-w-2xl p-4 md:p-6 lg:p-8">
         <div className="space-y-4">
@@ -123,11 +124,13 @@ export default function SettingsPage() {
                 <Skeleton className="h-4 w-full" /> {/* Description Skeleton */}
                  <Skeleton className="h-4 w-3/4" /> {/* Description Skeleton */}
               </CardHeader>
-              <CardContent>
+              {/* Add spacing to Skeleton CardContent */}
+              <CardContent className="mt-4">
                  <Skeleton className="h-4 w-1/4 mb-2" /> {/* Label Skeleton */}
                  <Skeleton className="h-10 w-full" /> {/* Input Skeleton */}
               </CardContent>
-              <CardFooter className="flex justify-between">
+              {/* Add spacing to Skeleton CardFooter */}
+              <CardFooter className="flex justify-between mt-6">
                   <Skeleton className="h-10 w-24" /> {/* Button Skeleton */}
                   <Skeleton className="h-10 w-24" /> {/* Button Skeleton */}
               </CardFooter>
@@ -137,7 +140,7 @@ export default function SettingsPage() {
     );
   }
 
-  // --- Render if Unauthenticated (though redirect should catch this) ---
+  // --- Render if Unauthenticated ---
    if (status === "unauthenticated") {
       // Or show a specific "Please log in" message here
       return <main className="container mx-auto p-4"><p>Redirecting to sign in...</p></main>;
@@ -159,6 +162,7 @@ export default function SettingsPage() {
            </AlertDescription>
          </Alert>
       )}
+      {/* Keeping the original Action Required alert */}
        {hasTokenConfigured === false && (
          <Alert variant="destructive" className="mb-6 bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800">
            <Terminal className="h-4 w-4 stroke-yellow-600 dark:stroke-yellow-400" />
@@ -184,7 +188,9 @@ export default function SettingsPage() {
               This token will be stored securely encrypted on our server.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+
+          {/* ===== Added margin-top here ===== */}
+          <CardContent className="mt-4"> {/* Adjust value (e.g., mt-6) if more space is needed */}
             <div className="grid w-full items-center gap-4 space-y-1.5">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="api-token">Up Personal Access Token</Label>
@@ -201,13 +207,16 @@ export default function SettingsPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between gap-4 space-y-1.5">
+
+          {/* ===== Added margin-top here ===== */}
+          <CardFooter className="flex justify-between gap-4 mt-6"> {/* Adjust value (e.g., mt-4) if needed */}
             {/* Remove Button */}
             <Button
               variant="destructive"
               type="button" // Important: type="button" prevents form submission
               onClick={handleRemoveToken}
-              disabled={isLoading /* || !hasTokenConfigured */} // Disable if loading or maybe if no token exists
+              // Keeping original disabled logic
+              disabled={isLoading /* || !hasTokenConfigured */}
             >
               {isLoading ? 'Processing...' : 'Remove Token'}
             </Button>

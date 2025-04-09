@@ -1,43 +1,43 @@
 // components/layout/Header.tsx
-
-"use client"; 
+"use client";
 
 import Link from 'next/link';
 import React from 'react';
 import { AuthButtons } from '../auth/AuthButtons';
 import { ModeToggle } from '../ui/mode-toggle';
-import { useSession } from 'next-auth/react'; // Import useSession hook
+import { useSession } from 'next-auth/react';
 
 const Header = () => {
-  const { data: session, status } = useSession(); // Get session status client-side
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        {/* Logo/Brand Name */}
-        <div className="flex items-center"> {/* Adjusted flex container */}
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            {/* Consider optimizing image loading if needed */}
+      {/* Apply padding directly here, control max-width, and center */}
+      {/* Adjust px values (px-4, sm:px-6 etc.) to match the desired spacing */}
+      <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
+
+        {/* Left Group: Logo, Title, Nav */}
+        <div className="flex items-center space-x-4 md:space-x-6">
+          <Link href="/" className="flex items-center space-x-2">
             <img src="/UP_STROKE_LOGO.svg" alt="Up Logo" className="h-6 w-auto" />
-            <span className="font-bold">Upside</span>
+            <span className="hidden font-bold sm:inline-block">Upside</span>
           </Link>
 
-          {/* Navigation Links - Show Dashboard link if logged in */}
           {status === 'authenticated' && (
-            <nav className="flex items-center space-x-4 ml-6">
-                <Link href="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-                    Dashboard
-                </Link>
-                 {/* Add other navigation links here */}
+            <nav className="flex items-center space-x-4">
+              <Link href="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+                Dashboard
+              </Link>
             </nav>
-           )}
+          )}
         </div>
 
-        {/* Right side items */}
-        <div className="flex flex-1 items-center justify-end space-x-2">
-           <ModeToggle />
+        {/* Right Group: Theme Toggle, Auth Buttons */}
+        <div className="flex items-center space-x-2">
+          <ModeToggle />
           <AuthButtons />
         </div>
+
       </div>
     </header>
   );

@@ -2,7 +2,9 @@
 import { type AuthOptions } from "next-auth"; // Use 'type' import if only used as type here
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import prisma from '@/lib/prisma'; // Keep prisma import
+import { getPrismaInstance } from '@/lib/prisma'; 
+
+const prisma = getPrismaInstance(); // Keep prisma import
 
 // Define and EXPORT authOptions from this central location
 export const authOptions: AuthOptions = {

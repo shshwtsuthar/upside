@@ -1,11 +1,14 @@
 // app/api/user/accounts/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions"; // <-- Updated importimport prisma from '@/lib/prisma';
+import { authOptions } from "@/lib/authOptions"; // <-- Updated importimport { getPrismaInstance } from '@/lib/prisma'; 
+
 import { decryptToken } from '@/lib/crypto';
 import { getUpAccounts } from '@/lib/up-api'; // Reuse existing function
 import { UpAccountResource } from '@/lib/up-api-types';
+import { getPrismaInstance } from '@/lib/prisma';
 
+const prisma = getPrismaInstance();
 export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {

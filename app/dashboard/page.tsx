@@ -1,13 +1,13 @@
 // app/dashboard/page.tsx
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import prisma from "@/lib/prisma";
 import { decryptToken } from "@/lib/crypto";
 import { getUpAccounts, getUpTransactions, getAllUpTransactionsForDateRange, formatCurrency } from "@/lib/up-api";
 import { UpAccountResource, UpTransactionResource, UpTransactionsResponse } from "@/lib/up-api-types";
 import { redirect } from 'next/navigation';
 import Link from "next/link";
-
+import { getPrismaInstance } from '@/lib/prisma'; 
+const prisma = getPrismaInstance(); 
 // Import UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

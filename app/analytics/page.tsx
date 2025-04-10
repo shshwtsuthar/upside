@@ -2,7 +2,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from 'next/navigation';
-import prisma from "@/lib/prisma";
 import { decryptToken } from "@/lib/crypto";
 import {
     getAllUpTransactionsForDateRange,
@@ -14,7 +13,8 @@ import {
     UpCategoryResource,
 } from "@/lib/up-api-types";
 import { format } from 'date-fns';
-
+import { getPrismaInstance } from '@/lib/prisma'; 
+const prisma = getPrismaInstance();
 // Import UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

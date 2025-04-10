@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/authOptions";import prisma from '@/lib/prisma';
+import { authOptions } from "@/lib/authOptions";import { getPrismaInstance } from '@/lib/prisma'; 
+
+const prisma = getPrismaInstance();
 import { encryptToken } from '@/lib/crypto'; // Import the encryption function
 
 // --- Handler for POST requests (Save Token) ---

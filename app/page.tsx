@@ -1,8 +1,9 @@
 // app/page.tsx
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
-import prisma from "@/lib/prisma";
-import { redirect } from 'next/navigation';
+
+import { getPrismaInstance } from '@/lib/prisma'; 
+const prisma = getPrismaInstance(); import { redirect } from 'next/navigation';
 
 // Import the prompt components
 import { LoginPrompt } from "@/components/prompts/LoginPrompt";

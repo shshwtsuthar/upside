@@ -156,3 +156,46 @@ export interface UpErrorObject {
 export interface UpErrorResponse {
   errors: UpErrorObject[];
 }
+
+export interface UpCategoryAttributes {
+  name: string; // e.g., "Groceries", "Transport"
+}
+
+// Represents a single Category resource
+export interface UpCategoryResource {
+  type: 'categories';
+  id: string; // Unique identifier for the category (e.g., "groceries")
+  attributes: UpCategoryAttributes;
+  relationships: {
+    parent: { // Relationship to parent category
+      data: {
+        type: 'categories';
+        id: string;
+      } | null; // Null for top-level categories
+      links?: {
+        related: string;
+      };
+    };
+    children: { // Relationship to child categories
+      data: {
+        type: 'categories';
+        id: string;
+      }[]; // Array of child category identifiers
+      links?: {
+        related: string;
+      };
+    };
+  };
+  links?: {
+      self: string;
+  };
+}
+
+// Represents the top-level structure for a list of categories
+export interface UpCategoriesResponse {
+  data: UpCategoryResource[];
+  links: {
+    prev: string | null;
+    next: string | null;
+  };
+}

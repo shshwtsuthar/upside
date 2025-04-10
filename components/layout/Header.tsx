@@ -43,6 +43,30 @@ const Header = () => {
                 Dashboard
               </Link>
 
+              <Link
+                href="/transactions"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === '/transactions'
+                    ? "text-primary" // Active style
+                    : "text-muted-foreground" // Inactive style
+                )}
+              >
+                Transactions
+              </Link>
+
+              <Link
+                href="/analytics"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  pathname === '/analytics'
+                    ? "text-primary" // Active style
+                    : "text-muted-foreground" // Inactive style
+                )}
+              >
+                Analytics
+              </Link>
+
               {/* Settings Link - Added */}
               <Link
                 href="/settings"

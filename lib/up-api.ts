@@ -1,6 +1,11 @@
 // lib/up-api.ts
 
 import { UpAccountsResponse, UpTransactionsResponse, UpErrorResponse, UpTransactionResource } from './up-api-types';
+import {
+    // ... existing imports ...
+    UpCategoryResource, // <-- Add CategoryResource
+    UpCategoriesResponse // <-- Add CategoriesResponse
+} from './up-api-types';
 
 const UP_API_BASE_URL = 'https://api.up.com.au/api/v1';
 const MAX_PAGE_SIZE = 100; // Up API max page size
@@ -179,4 +184,10 @@ export function formatCurrency(amountInBaseUnits: number, currencyCode: string =
       style: 'currency',
       currency: currencyCode,
     }).format(amount);
+}
+
+export async function getUpCategories(token: string): Promise<UpCategoriesResponse> {
+    // The API might support pagination, but typically returns all in one page.
+    // Adjust page size if needed based on API behavior.
+    return fetchUpApi<UpCategoriesResponse>('/categories?page[size]=100', { token, method: 'GET' });
 }

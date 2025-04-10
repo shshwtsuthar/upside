@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { decryptToken } from "@/lib/crypto";
-// Correctly import the exported function
 import { getUpAccounts, getUpTransactions, getAllUpTransactionsForDateRange, formatCurrency } from "@/lib/up-api";
 import { UpAccountResource, UpTransactionResource, UpTransactionsResponse } from "@/lib/up-api-types";
 import { redirect } from 'next/navigation';
@@ -12,19 +11,17 @@ import Link from "next/link";
 // Import UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Banknote, Landmark, TrendingUp, TrendingDown, AlertCircle, Ban } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton"; // <-- ** Ensure Skeleton is imported **
 
 // --- Import Client/Helper Components ---
-import { PaginatedTransactions } from "@/components/dashboard/PaginatedTransactions";
 import { MonthlySpendingCard } from "@/components/dashboard/MonthlySpendingCard";
 import { MonthlyIncomeCard } from "@/components/dashboard/MonthlyIncomeCard";
+import { SpendingByCategoryChart } from "@/components/dashboard/SpendingByCategoryChart";
 
-// --- Helper Components Definitions (with explicit 'return') ---
-// These can be moved to separate files later if preferred
+// --- Helper Components Definitions (Moved outside DashboardPage function) ---
 
 function MissingTokenPrompt() {
-    // Add 'return' statement
     return (
         <Alert variant="destructive" className="mb-6">
             <Ban className="h-4 w-4" />
@@ -41,7 +38,6 @@ function MissingTokenPrompt() {
 }
 
 function ApiErrorDisplay({ message }: { message: string }) {
-    // Add 'return' statement
     return (
         <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -54,7 +50,6 @@ function ApiErrorDisplay({ message }: { message: string }) {
 }
 
 function TotalBalanceCard({ totalBalance }: { totalBalance: number }) {
-     // Add 'return' statement
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -76,7 +71,6 @@ function TotalBalanceCard({ totalBalance }: { totalBalance: number }) {
 }
 
 function AccountsCard({ accounts }: { accounts: UpAccountResource[] }) {
-     // Add 'return' statement
     return (
         <Card>
             <CardHeader>
@@ -116,35 +110,17 @@ export default async function DashboardPage() {
     }
 
     let decryptedApiKey: string | null = null;
-    let apiError: string | null = null; // For critical errors
+    let apiError: string | null = null;
     let accounts: UpAccountResource[] = [];
-    let initialTransactionsResponse: UpTransactionsResponse | null = null;
     let totalBalance = 0;
     let monthlyIncome: number | null = null;
     let monthlySpending: number | null = null;
-    let monthlyCalcError: string | null = null; // Specific error for monthly calcs
+    let monthlyCalcError: string | null = null;
+    let monthlyTransactions: UpTransactionResource[] | null = null;
 
-    // --- Get Current Month Date Range ---
     const now = new Date();
-    // Ensure we get the start of the current month in the server's local timezone first
     const localStartOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    // Ensure we get the start of the *next* month in the server's local timezone (exclusive end)
     const localEndOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
-
-    // --- ADDED LOGGING ---
-    // Convert to ISO strings (which will be UTC 'Z') for logging context
-    const startOfMonthISO = localStartOfMonth.toISOString();
-    const endOfMonthISO = localEndOfMonth.toISOString(); // This is the 'until' value (exclusive)
-
-    console.log(`--- Dashboard Page ---`);
-    console.log(`Current Time (Server Local): ${now.toString()}`);
-    console.log(`Calculated Start of Month (Local): ${localStartOfMonth.toString()}`);
-    console.log(`Calculated End of Month (Local, Exclusive): ${localEndOfMonth.toString()}`);
-    console.log(`API Filter - Since (UTC): ${startOfMonthISO}`);
-    console.log(`API Filter - Until (UTC): ${endOfMonthISO}`);
-    console.log(`----------------------`);
-    // --- END LOGGING ---
-
 
     try {
         // --- Token Decryption ---
@@ -164,17 +140,16 @@ export default async function DashboardPage() {
                  apiError = "Failed to decrypt your API token. Please re-enter it in Settings.";
              }
         } else {
+            // Use the component now defined outside
              return ( <main className="container mx-auto max-w-4xl p-4 md:p-6 lg:p-8"><h1 className="text-3xl font-bold mb-6">Dashboard</h1><MissingTokenPrompt /></main> );
         }
 
-        // --- API Data Fetching (only if token is valid) ---
+        // --- API Data Fetching ---
         if (decryptedApiKey) {
-            const results = await Promise.allSettled([
-                getUpAccounts(decryptedApiKey),
-                getUpTransactions(decryptedApiKey, 25),
-                // Pass the Date objects - conversion to ISO happens inside the function now
-                getAllUpTransactionsForDateRange(decryptedApiKey, localStartOfMonth, localEndOfMonth)
-            ]);
+             const results = await Promise.allSettled([
+                 getUpAccounts(decryptedApiKey),
+                 getAllUpTransactionsForDateRange(decryptedApiKey, localStartOfMonth, localEndOfMonth)
+             ]);
 
             // Process Accounts & Total Balance
             if (results[0].status === 'fulfilled') {
@@ -187,54 +162,24 @@ export default async function DashboardPage() {
                 }
             }
 
-            // Process Initial Transactions for Table
+            // Process Monthly Transactions for Income/Spending AND the chart
             if (results[1].status === 'fulfilled') {
-                initialTransactionsResponse = results[1].value;
-            } else {
-                 console.error("Failed to fetch initial transactions:", results[1].reason);
-            }
-
-            // Process Monthly Transactions for Income/Spending
-            if (results[2].status === 'fulfilled') {
-                const monthlyTransactions = results[2].value;
-                // --- ADDED LOGGING ---
-                console.log(`--- Dashboard Processing ---`);
-                console.log(`Total monthly transactions received: ${monthlyTransactions.length}`);
-                // --- END LOGGING ---
+                monthlyTransactions = results[1].value;
                 let incomeSum = 0;
                 let spendingSum = 0;
                 monthlyTransactions.forEach((tx: UpTransactionResource) => {
                     const amount = tx.attributes.amount.valueInBaseUnits;
-                    const txDate = tx.attributes.createdAt;
-                    // --- ADDED LOGGING ---
-                    console.log(`  Processing TX: ID=${tx.id}, Date=${txDate}, Amount=${amount}`);
-                    // --- END LOGGING ---
-                    if (amount > 0) {
-                        incomeSum += amount;
-                        // --- ADDED LOGGING ---
-                        console.log(`    Added to income. Current incomeSum: ${incomeSum}`);
-                        // --- END LOGGING ---
-                    } else if (amount < 0) {
-                        spendingSum += amount; // Keep it negative for now
-                        // --- ADDED LOGGING ---
-                        console.log(`    Added to spending. Current spendingSum: ${spendingSum}`);
-                        // --- END LOGGING ---
-                    } else {
-                         // --- ADDED LOGGING ---
-                        console.log(`    Amount is zero. Skipping.`);
-                         // --- END LOGGING ---
-                    }
+                    if (amount > 0) { incomeSum += amount; }
+                    else if (amount < 0) { spendingSum += amount; }
                 });
                 monthlyIncome = incomeSum;
-                monthlySpending = spendingSum; // Keep spending as negative sum
-                // --- ADDED LOGGING ---
-                console.log(`Final Calculated Income: ${monthlyIncome}`);
-                console.log(`Final Calculated Spending: ${monthlySpending}`); // This will be negative or zero
-                console.log(`--------------------------`);
-                // --- END LOGGING ---
+                monthlySpending = spendingSum;
             } else {
-                console.error("Failed to fetch monthly transactions:", results[2].reason);
-                monthlyCalcError = `Could not calculate monthly figures: ${results[2].reason?.message}`;
+                console.error("Failed to fetch monthly transactions:", results[1].reason);
+                monthlyCalcError = `Could not calculate monthly figures or chart data: ${results[1].reason?.message}`;
+                 if (!apiError) {
+                     apiError = `Failed to load transaction data: ${results[1].reason?.message}`;
+                 }
             }
         }
 
@@ -249,52 +194,77 @@ export default async function DashboardPage() {
         }
     }
 
-    const isMonthlyLoading = !!(decryptedApiKey && !apiError && !monthlyCalcError && monthlyIncome === null && monthlySpending === null);
+    const isLoadingData = !!(decryptedApiKey && !apiError && (monthlyIncome === null || monthlySpending === null || monthlyTransactions === null));
 
     // --- Rendering ---
     return (
         <main className="container mx-auto max-w-4xl p-4 md:p-6 lg:p-8">
             <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
+            {/* Use the component now defined outside */}
             {apiError && <ApiErrorDisplay message={apiError} />}
 
             {!apiError && decryptedApiKey && (
                 <>
-                    <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
+                    {/* Summary Cards Grid */}
+                    <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+                         {/* Use the component now defined outside */}
                          <TotalBalanceCard totalBalance={totalBalance} />
                          <MonthlyIncomeCard
                              incomeAmount={monthlyIncome}
-                             isLoading={isMonthlyLoading}
+                             isLoading={isLoadingData}
                              error={monthlyCalcError}
                           />
                          <MonthlySpendingCard
-                             spendingAmount={monthlySpending} // Pass the negative sum
-                             isLoading={isMonthlyLoading}
+                             spendingAmount={monthlySpending}
+                             isLoading={isLoadingData}
                              error={monthlyCalcError}
                          />
                     </div>
 
-                    {accounts.length > 0 && (
-                        <div className="mb-6"><AccountsCard accounts={accounts} /></div>
-                    )}
-                    {accounts.length === 0 && (
-                        <Alert className="mb-6">
-                           <Landmark className="h-4 w-4" />
-                           <AlertTitle>No Accounts Found</AlertTitle>
-                           <AlertDescription>We couldn't find any accounts associated with your Up token.</AlertDescription>
-                        </Alert>
-                    )}
+                    {/* Accounts List & Spending Chart Grid */}
+                    <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-2 mb-6">
+                        {/* Spending Chart */}
+                        <div>
+                           <SpendingByCategoryChart
+                                transactions={monthlyTransactions}
+                                isLoading={isLoadingData}
+                                error={monthlyCalcError}
+                            />
+                        </div>
 
-                    {initialTransactionsResponse && (
-                        <div className="mb-6"><PaginatedTransactions initialTransactions={initialTransactionsResponse.data} initialLinks={initialTransactionsResponse.links}/></div>
-                    )}
-                    {!initialTransactionsResponse && !monthlyCalcError && (
-                        <Alert variant="default" className="mb-6">
-                            <TrendingUp className="h-4 w-4" />
-                            <AlertTitle>Transactions</AlertTitle>
-                            <AlertDescription>Could not load initial transactions list.</AlertDescription>
-                        </Alert>
-                    )}
+                        {/* Accounts List */}
+                        <div>
+                             {/* Use the component now defined outside */}
+                            {accounts.length > 0 ? (
+                                <AccountsCard accounts={accounts} />
+                            ) : (
+                                // Show placeholder/skeleton if accounts are loading but other data might be ready
+                                isLoadingData && !apiError ? (
+                                   <Card>
+                                       <CardHeader>
+                                            {/* Use the imported Skeleton component */}
+                                            <Skeleton className="h-6 w-1/2" />
+                                            <Skeleton className="h-4 w-3/4" />
+                                        </CardHeader>
+                                       <CardContent className="space-y-4">
+                                            {/* Use the imported Skeleton component */}
+                                            <Skeleton className="h-16 w-full" />
+                                            <Skeleton className="h-16 w-full" />
+                                        </CardContent>
+                                   </Card>
+                                ) : (
+                                   // Show error/empty state only if not loading and accounts are empty
+                                   !isLoadingData && accounts.length === 0 &&
+                                   <Alert>
+                                       <Landmark className="h-4 w-4" />
+                                       <AlertTitle>No Accounts Found</AlertTitle>
+                                       <AlertDescription>We couldn't find any accounts associated with your Up token.</AlertDescription>
+                                   </Alert>
+                                )
+                            )}
+                        </div>
+                    </div>
                 </>
             )}
         </main>

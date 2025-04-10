@@ -7,49 +7,39 @@ import { decryptToken } from '@/lib/crypto';
 import { UpTransactionsResponse, UpErrorResponse } from '@/lib/up-api-types';
 
 const UP_API_BASE_URL = 'https://api.up.com.au/api/v1';
-const DEFAULT_PAGE_SIZE = 25; // Or make configurable
+const DEFAULT_PAGE_SIZE = 25;
 
-/**
- * Fetches a specific page of transactions from the Up API using a relative path.
- */
-async function fetchTransactionPage(token: string, relativePath: string): Promise<UpTransactionsResponse> {
-     // Basic validation on the constructed path
-     if (!relativePath || !relativePath.startsWith('/transactions')) {
-         throw new Error('Invalid relative path provided for Up API transaction fetch.');
-     }
-
-    const url = `${UP_API_BASE_URL}${relativePath}`; // Construct full URL
-    console.log("Fetching from Up API:", url); // Log the URL being fetched
-    const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-    };
-
-    try {
-        const response = await fetch(url, { method: 'GET', headers });
-
-        if (!response.ok) {
+// --- fetchTransactionPage Helper Function (Remains the same) ---
+async function fetchTransactionPage(token: string, pathOrUrl: string): Promise<UpTransactionsResponse> {
+     const isRelativePath = pathOrUrl.startsWith('/');
+     const url = isRelativePath ? `${UP_API_BASE_URL}${pathOrUrl}` : pathOrUrl;
+     console.log("Fetching (API Route):", url.split('?')[0] + '?...');
+     const headers = { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' };
+     try {
+         const response = await fetch(url, { method: 'GET', headers, cache: 'no-store' });
+         if (!response.ok) {
              let errorBody: UpErrorResponse | { message?: string } | null = null;
              try { errorBody = await response.json(); } catch (jsonError) {}
-             let errorMessage = `Up API Error (${response.status}): Failed to fetch ${relativePath}.`;
-             if (errorBody && 'errors' in errorBody && errorBody.errors.length > 0) {
-                 errorMessage = `Up API Error (${response.status}): ${errorBody.errors[0].title} - ${errorBody.errors[0].detail}`;
-             } else if (errorBody && 'message' in errorBody && errorBody.message) {
-                 errorMessage = `Up API Error (${response.status}): ${errorBody.message}`;
-             }
-            console.error("Up API Request Failed:", { url: url, status: response.status, errorBody });
-            throw new Error(errorMessage);
-        }
-
-        const data: UpTransactionsResponse = await response.json();
-        return data;
-
-    } catch (error: any) {
-        console.error(`Error during Up API call to ${url}:`, error);
-        throw new Error(error.message || `Network error or failure fetching from Up API: ${url}`);
-    }
+             let errorMessage = `Up API Error (${response.status}): Failed to fetch transactions.`;
+              if (errorBody && 'errors' in errorBody && errorBody.errors.length > 0) {
+                  errorMessage = `Up API Error (${response.status}): ${errorBody.errors[0].title} - ${errorBody.errors[0].detail}`;
+              } else if (errorBody && 'message' in errorBody && errorBody.message) {
+                  errorMessage = `Up API Error (${response.status}): ${errorBody.message}`;
+              }
+             console.error("Up API Request Failed:", { url: url.split('?')[0], status: response.status, errorBody });
+             throw new Error(errorMessage);
+         }
+         const text = await response.text();
+         if (!text) {
+             console.warn(`Empty response body received from ${url.split('?')[0]}`);
+             return { data: [], links: { prev: null, next: null } };
+         }
+         return JSON.parse(text) as UpTransactionsResponse;
+     } catch (error: any) {
+         console.error(`Error during Up API call to ${url.split('?')[0]}:`, error);
+         throw new Error(error.message || `Network error or failure fetching from Up API.`);
+     }
 }
-
 
 // --- Handler for GET requests ---
 export async function GET(request: Request) {
@@ -58,28 +48,47 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Get cursor info from query parameters
     const { searchParams } = new URL(request.url);
-    const cursorType = searchParams.get('cursorType'); // 'after' or 'before'
-    const cursorValue = searchParams.get('cursorValue'); // The actual cursor string
 
-    // Validate cursor parameters
-    if (!cursorType || !cursorValue || (cursorType !== 'after' && cursorType !== 'before')) {
-        return NextResponse.json({ error: 'Missing or invalid cursorType/cursorValue query parameters' }, { status: 400 });
-    }
+    // Pagination Params
+    const cursorType = searchParams.get('cursorType');
+    const cursorValue = searchParams.get('cursorValue');
 
-    // 3. Construct the relative path for the Up API call
-    // Use encodeURIComponent just in case cursor has special chars, though likely unnecessary for Up cursors
-    const encodedCursorValue = encodeURIComponent(cursorValue);
-    const relativePath = `/transactions?page[size]=${DEFAULT_PAGE_SIZE}&page[${cursorType}]=${encodedCursorValue}`;
+    // Filter Params - Only Date
+    const since = searchParams.get('since');
+    const until = searchParams.get('until');
+    // Removed accountIds and type parsing
+
+    console.log("--- API Route Received ---");
+    console.log("Cursor Type:", cursorType);
+    console.log("Cursor Value:", cursorValue);
+    console.log("Since:", since);
+    console.log("Until:", until);
+    console.log("-------------------------");
+
+    const apiParams = new URLSearchParams();
+    apiParams.set('page[size]', DEFAULT_PAGE_SIZE.toString());
+
+    // Add pagination cursor if provided
+    if (cursorType === 'after' && cursorValue) apiParams.set('page[after]', cursorValue);
+    else if (cursorType === 'before' && cursorValue) apiParams.set('page[before]', cursorValue);
+
+    // Add only date filters if provided
+    if (since) apiParams.set('filter[since]', since);
+    if (until) apiParams.set('filter[until]', until);
+
+    // Removed logic for adding account and type filters to apiParams
+
+    const apiPath = `/transactions?${apiParams.toString()}`;
+    console.log(">>> Constructed Up API path:", apiPath);
 
     try {
-        // 4. Get User & Decrypt Token (same as before)
+        // Token decryption logic
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
             select: { encryptedUpToken: true, upTokenIv: true, upTokenAuthTag: true }
         });
-        if (!user?.encryptedUpToken || !user.upTokenIv || !user.upTokenAuthTag) {
+        if (!user || !user.encryptedUpToken || !user.upTokenIv || !user.upTokenAuthTag) {
             return NextResponse.json({ error: 'API token not configured.' }, { status: 400 });
         }
         const decryptedApiKey = decryptToken({
@@ -88,18 +97,26 @@ export async function GET(request: Request) {
             authTag: user.upTokenAuthTag
         });
         if (!decryptedApiKey) {
-            return NextResponse.json({ error: 'Failed to decrypt API token.' }, { status: 500 });
+            console.error(`Decryption failed for user ${session.user.id}.`);
+            return NextResponse.json({ error: 'Failed to access API token.' }, { status: 500 });
         }
 
-        // 5. Fetch the specific page from Up API using the *constructed relative path*
-        const transactionData = await fetchTransactionPage(decryptedApiKey, relativePath);
+        // Fetch from Up API
+        const transactionData = await fetchTransactionPage(decryptedApiKey, apiPath);
 
-        // 6. Return the fetched data
         return NextResponse.json(transactionData, { status: 200 });
 
     } catch (error: any) {
-        console.error(`Error fetching transaction page (${relativePath}):`, error);
-        const status = error.message?.includes("401") || error.message?.includes("decrypt") ? 401 : 500;
-        return NextResponse.json({ error: error.message || 'Failed to fetch transaction page.' }, { status });
+        // Error handling
+         console.error(`Error handling transaction request (${apiPath}):`, error);
+         let status = 500;
+         if (error.message?.includes("401")) status = 401;
+         else if (error.message?.includes("400")) status = 400;
+         else if (error.message?.includes("API token not configured")) status = 400;
+         else if (error.message?.includes("Failed to access API token")) status = 500;
+         const clientErrorMessage = status === 401 ? "Up API Authorization Failed."
+                                : status === 400 ? "Invalid request or token not configured."
+                                : "Failed to fetch transactions.";
+         return NextResponse.json({ error: clientErrorMessage }, { status });
     }
 }

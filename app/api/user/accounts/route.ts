@@ -1,8 +1,7 @@
 // app/api/user/accounts/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from '@/lib/prisma';
+import { authOptions } from "@/lib/authOptions"; // <-- Updated importimport prisma from '@/lib/prisma';
 import { decryptToken } from '@/lib/crypto';
 import { getUpAccounts } from '@/lib/up-api'; // Reuse existing function
 import { UpAccountResource } from '@/lib/up-api-types';

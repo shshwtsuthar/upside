@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { FloatingSettingsButton } from '@/components/layout/FloatingSettingsButton';
 // --- Added imports ---
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import { Toaster } from "@/components/ui/sonner" // Ensure Toaster is imported
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });

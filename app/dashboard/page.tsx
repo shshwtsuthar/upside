@@ -1,6 +1,6 @@
 // app/dashboard/page.tsx
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import prisma from "@/lib/prisma";
 import { decryptToken } from "@/lib/crypto";
 import { getUpAccounts, getUpTransactions, getAllUpTransactionsForDateRange, formatCurrency } from "@/lib/up-api";

@@ -4,8 +4,6 @@
 
 Upside is an open-source, web application designed to provide an enhanced frontend experience for interacting with your [Up Banking](https://up.com.au/) data. It offers visualizations and features beyond the standard Up app, built with Next.js, ShadCN UI, Prisma, and PostgreSQL.
 
-**(Optional: Add a screenshot here when ready)**
-
 ![Upside Dashboard Screenshot](https://github.com/user-attachments/assets/397e25f7-ce56-4292-b97e-b12dd04d2a88)
 ![Upside Transactions Screenshot](https://github.com/user-attachments/assets/5b99181f-6c07-4d47-b89e-1b3b6faae3c1)
 ![Upside Analytics Screenshot](https://github.com/user-attachments/assets/2d8fe749-d0be-4d17-b466-2aa81db02730)

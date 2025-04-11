@@ -8,6 +8,7 @@ Upside is an open-source, web application designed to provide an enhanced fronte
 ![Upside Transactions Screenshot](https://github.com/user-attachments/assets/5b99181f-6c07-4d47-b89e-1b3b6faae3c1)
 ![Upside Analytics Screenshot](https://github.com/user-attachments/assets/2d8fe749-d0be-4d17-b466-2aa81db02730)
 
+The project is currently deployed on Vercel [here (https://upside-beta.vercel.app)](https://upside-beta.vercel.app).
 
 ## Features
 
@@ -124,17 +125,6 @@ The following environment variables are required for the application to run corr
 *   `GOOGLE_CLIENT_SECRET`: Your Google OAuth application client secret.
 *   `UP_TOKEN_ENCRYPTION_KEY`: A **64-character hexadecimal string (32 bytes)** used to encrypt Up API tokens in the database. Generate securely (e.g., `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). **Keep this secret!**
 
-## Deployment
-
-The easiest way to deploy this Next.js application is using [Vercel](https://vercel.com/).
-
-1.  Push your code to a Git repository (GitHub, GitLab, Bitbucket).
-2.  Import the project into Vercel.
-3.  Configure the required **Environment Variables** listed above in the Vercel project settings.
-4.  Vercel will automatically build and deploy your application. Ensure your `DATABASE_URL` points to a production-accessible database.
-
-For more details, see the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying).
-
 ## TODO / Future Enhancements
 
 *   **Transactions Page:**
@@ -147,13 +137,14 @@ For more details, see the [Next.js deployment documentation](https://nextjs.org/
     *   Implement Date Range selector with presets (Last Month, YTD, etc.).
     *   Fetch and process data for multiple months for trend charts.
     *   Implement "Top Spending Categories" list/chart.
-    *   (Optional) Implement Account filtering for reports.
+    *   Implement Account filtering for reports.
+    *   Properly improve the analytics page
 *   **Settings Page:**
     *   Add "Export Data" (CSV) functionality.
     *   Display "Token Last Updated" timestamp.
 *   **New Pages:**
-    *   Consider a Budgeting page (requires DB changes).
-    *   Consider a Savings Goals page (requires checking Up API capabilities).
+    *   Budgeting page (requires DB changes).
+    *   Savings Goals page (requires checking Up API capabilities).
 *   **General:**
     *   Refine UI/UX and responsiveness.
     *   Improve loading state granularity.
